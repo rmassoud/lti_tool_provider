@@ -1,0 +1,100 @@
+lti_tool_provider.admin:
+  path: 'admin/config/lti-tool-provider'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'LTI Tool Provider'
+  requirements:
+    _permission: 'administer lti_tool_provider module'
+
+lti_tool_provider.consumer_list:
+  path: '/admin/config/lti-tool-provider/lti-tool-consumers'
+  defaults:
+    _entity_list: 'lti_tool_provider_consumer'
+    _title: 'Consumer List'
+  requirements:
+    _permission: 'administer lti_tool_provider module'
+
+lti_tool_provider.consumer_view:
+  path: '/lti_tool_provider_consumer/{lti_tool_provider_consumer}/view'
+  defaults:
+    _entity_view: 'lti_tool_provider_consumer'
+    _title: 'Consumer Content'
+  requirements:
+    _entity_access: 'lti_tool_provider_consumer.view'
+
+lti_tool_provider.consumer_add:
+  path: '/lti_tool_provider_consumer/add'
+  defaults:
+    _entity_form: lti_tool_provider_consumer.add
+    _title: 'Add Consumer'
+  requirements:
+    _entity_create_access: 'lti_tool_provider_consumer'
+
+entity.lti_tool_provider_consumer.edit_form:
+  path: '/lti_tool_provider_consumer/{lti_tool_provider_consumer}/edit'
+  defaults:
+    _entity_form: lti_tool_provider_consumer.edit
+    _title: 'Edit Consumer'
+  requirements:
+    _entity_access: 'lti_tool_provider_consumer.edit'
+
+entity.lti_tool_provider_consumer.delete_form:
+  path: '/lti_tool_provider_consumer/{lti_tool_provider_consumer}/delete'
+  defaults:
+    _entity_form: lti_tool_provider_consumer.delete
+    _title: 'Delete Consumer'
+  requirements:
+    _entity_access: 'lti_tool_provider_consumer.delete'
+
+lti_tool_provider.user_attributes:
+  path: '/admin/config/lti-tool-provider/user-attributes'
+  defaults:
+    _form: '\Drupal\lti_tool_provider\Form\UserAttributes'
+    _title: 'User Attributes'
+  requirements:
+    _permission: 'administer lti_tool_provider module'
+
+lti_tool_provider.global_roles:
+  path: '/admin/config/lti-tool-provider/global-roles'
+  defaults:
+    _form: '\Drupal\lti_tool_provider\Form\GlobalRoles'
+    _title: 'Global Roles'
+  requirements:
+    _permission: 'administer lti_tool_provider module'
+
+lti_tool_provider.course_types:
+  path: '/admin/config/lti-tool-provider/course-types'
+  defaults:
+    _form: '\Drupal\lti_tool_provider\Form\CourseTypes'
+    _title: 'Course Types'
+  requirements:
+    _permission: 'administer lti_tool_provider module'
+
+# lti_tool_provider.group_mapping:
+#   path: '/admin/config/lti-tool-provider/group-mapping'
+#   defaults:
+#     _form: '\Drupal\lti_tool_provider\Form\GlobalRoles'
+#     _title: 'Group Mapping'
+#   requirements:
+#     _permission: 'administer lti_tool_provider module'
+
+
+
+lti_tool_provider.info:
+  path: '/lti-tool-provider/info'
+  defaults:
+    _controller: '\Drupal\lti_tool_provider\Controller\LTIToolProviderController::lti_tool_provider_info'
+    _title: 'LTI Info'
+  requirements:
+    _permission: 'view lti info'
+
+
+lti_tool_provider.lti:
+  path: 'lti'
+  defaults:
+    _controller: '\Drupal\lti_tool_provider\Controller\LTIToolProviderController::lti_tool_provider_launch'
+  requirements:
+    _access: 'TRUE'
+
+
+

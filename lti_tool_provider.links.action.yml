@@ -1,0 +1,11 @@
+# All action links for this module
+
+lti_tool_provider.consumer_add:
+  # Which route will be called by the link
+  route_name: lti_tool_provider.consumer_add
+  title: 'Add Consumer'
+
+  # Where will the link appear, defined by route name.
+  appears_on:
+    - lti_tool_provider.consumer_list
+    - lti_tool_provider.consumer_view

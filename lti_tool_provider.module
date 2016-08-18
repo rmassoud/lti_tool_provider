@@ -1,0 +1,349 @@
+<?php
+
+
+/**
+ * @file
+ * lti_tool_provider hook implementations and support functions.
+ */
+
+use Drupal\Core\Session\AnonymousUserSession;
+
+
+/**
+ * Implements hook_library_info().
+ */
+function lti_tool_provider_libraries_info() {
+  $libraries['oauth'] = array(
+    'name' => 'OAuth library',
+    'vendor url' => 'http://oauth.googlecode.com',
+    'download url' => 'https://github.com/juampy72/OAuth-PHP',
+    'version' => '1.0',
+    // 'version callback' => '_lti_tool_provider_oauth_version',
+    'files' => array(
+      'php' => array('OAuth.php'),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Implements hook_registry_files_alter().
+ */
+// function lti_tool_provider_registry_files_alter(&$files, $modules) {
+//   drupal_load('module', 'libraries');
+//   $path = libraries_get_path('oauth');
+//   $path = ($path . '/OAuth.php');
+//   $files[$path] = array(
+//     'module' => 'lti_tool_provider',
+//     'weight' => 0,
+//   );
+// }
+
+/**
+ * Implements hook_help().
+ */
+function lti_tool_provider_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#lti_tool_provider':
+      $module_path = drupal_get_path('module', 'lti_tool_provider');
+      $output  = '<p>' . t("Read the !url file in the LTI Tool Provider module directory.", array(
+        '!url' => l(t('README.txt'), $module_path . '/README.txt'),
+      )) . '</p>';
+      $output .= '<p>' . t("Information about LTI Tool Provider can also be found on the module's !docs.", array(
+        '!docs' => l(t('project page'), 'http://drupal.org/sandbox/jzornig/1809350'),
+      )) . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Determine if this is a valid LTI request.
+ *
+ * @return boolean
+ *   Returns TRUE if this is a Basic LTI message with minimum values
+ *   to meet the protocol.
+ */
+function lti_tool_provider_is_basic_lti_request() {
+  $good_message_type = array_key_exists('lti_message_type', $_REQUEST) ? $_REQUEST["lti_message_type"] : "basic-lti-launch-request";
+  $good_lti_version = array_key_exists('lti_version', $_REQUEST) ? $_REQUEST["lti_version"] : "LTI-1p0";
+  $resource_link_id = array_key_exists('resource_link_id', $_REQUEST) ? $_REQUEST["resource_link_id"] : NULL;
+  if ($good_message_type and $good_lti_version and isset($resource_link_id)) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Get the LTI roles.
+ *
+ * @return array
+ *   An array containing the roles.
+ */
+function lti_tool_provider_get_lti_roles() {
+  return array(
+    'Learner',
+    'Instructor',
+    'ContentDeveloper',
+    'Member',
+    'Manager',
+    'Mentor',
+    'Administrator',
+    'TeachingAssistant',
+  );
+}
+
+/**
+ * Get the LTI variables relating to the user.
+ *
+ * @return array
+ *   An array containing the variable names.
+ */
+function lti_tool_provider_user_mapping_lis_details() {
+  return array(
+    'lis_person_name_given',
+    'lis_person_name_family',
+    'lis_person_name_full',
+  );
+}
+
+/**
+ * Get the LTI variables relating to the context.
+ *
+ * @return array
+ *   An array containing the variable names.
+ */
+function lti_tool_provider_context_mapping_details() {
+  return array(
+    'context_id',
+    'context_label',
+    'context_title',
+    'context_type',
+  );
+}
+
+/**
+ * Retrieve the field labels and types from the user entity.
+ *
+ * Return as an array suitable for a select list.
+ *
+ * @param string $filter
+ *   The string which represent the type of field to retrieve.
+ *
+ * @return array
+ *   An array containing all the retrieved fields.
+ *   The label is not display safe.
+ */
+function _lti_tool_provider_retrieve_user_field_types($filter = 'TEXT') {
+  //$entites = Field::fieldInfo()->getInstance('user');
+  $result = array('none' => 'None');
+  // foreach ($entites['user'] as $field) {
+  //   if (strcasecmp($field['widget']['module'], $filter) == 0) {
+  //     $result[$field['field_name']] = $field['label'] . ' (' . $field['field_name'] . ')';
+  //   }
+  // }
+   return $result;
+}
+
+
+
+
+
+
+/**
+ * Retrieves the consumer entity via its consumer key.
+ *
+ * @param string $key
+ *   Consumer key.
+ *
+ * @return object
+ *   Consumer entity, null if record is unable to be retrieved.
+ */
+function lti_tool_provider_get_consumer_by_key($key) {
+  $entity_type = 'lti_tool_provider_consumer';
+  $query = \Drupal::entityQuery($entity_type);
+  $query->condition('lti_tool_provider_consumer_key', $key, '=');
+  $result = $query->execute();
+  if (!empty($result)) {
+    $consumers = entity_load_multiple($entity_type, array_keys($result));
+    return reset($consumers);
+  }
+  return NULL;
+}
+
+/**
+ * Provision a user account from the lti_info.
+ *
+ * @param string $lti_user
+ *   The lti user name.
+ * @param array $lti_info
+ *   The lti context info.
+ *
+ * @return object
+ *   The user account object or FALSE if the account creation failed.
+ */
+function lti_tool_provider_create_account($lti_user, $lti_info) {
+  // If a user image is supplied create a managed file,
+  // and attach it to the user account.
+  if (isset($context_info['user_image'])) {
+    $file = (object) array(
+      'uid' => 1,
+      'uri' => $context_info['user_image'],
+      'filename' => drupal_basename($lti_info['user_image']),
+      'filemime' => file_get_mimetype($filepath),
+      'status' => 1,
+    );
+    $file = file_save($file);
+    $picture = $file->fid;
+  }
+  else {
+    $picture = 0;
+  }
+  // Construct the userinfo to be used to create the account.
+  //$user_attribute_settings = variable_get('lti_tool_provider_user_attribute_mapping', array());
+  //$user_attribute_settings =  Drupal::config('lti_tool_provider.settings')->get('user_attribute_mapping');
+  $user_attribute_settings =  array(
+    'lis_person_name_given' => 'none', 
+    'lis_person_name_family' => 'none', 
+    'lis_person_name_full' => 'none',
+  );
+  $fields = _lti_tool_provider_retrieve_user_field_types('TEXT');
+  $userinfo = array(
+    'name' => $lti_user,
+    'pass' => user_password(20),
+    'init' => $lti_info['lis_person_contact_email_primary'],
+    'mail' => $lti_info['lis_person_contact_email_primary'],
+    'picture' => $picture,
+    'status' => 1,
+    'access' => REQUEST_TIME,
+  );
+  foreach ($user_attribute_settings as $variable => $field) {
+    if (($field != 'none') && isset($fields[$field]) && isset($lti_info[$variable])) {
+      $userinfo[$field] = array(LANGUAGE_NONE => array('0' => array('value' => $lti_info[$variable])));
+    }
+  }
+
+  // $account = user_save(drupal_anonymous_user(), $userinfo);
+  $account = entity_create('user', array(
+    'name' => $userinfo['name'],
+    'mail' => $userinfo['mail'],
+    'pass' => $userinfo['pass'],
+    'status' => 1,
+  ));
+  $account->enforceIsNew();
+  $account->save();
+
+  // Allow other modules to alter the newly provisioned lti user account.
+  // drupal_alter('lti_tool_provider_create_account', $account, $lti_info);
+  return $account;
+}
+
+
+/**
+ * Perform a drupal goto but avoid interfering with cron.php.
+ */
+function lti_tool_provider_goto($path) {
+  if (php_sapi_name() == 'cli') {
+    drupal_exit();
+  }
+  if (preg_match('/\/cron.php$/', $_SERVER['SCRIPT_NAME'])) {
+    drupal_exit();
+  }
+  // if (arg(0) == 'admin' && arg(1) == 'reports' && arg(2) == 'status' && arg(3) == 'run-cron') {
+  //   drupal_exit();
+  // }
+  // drupal_goto($path);
+  return new RedirectResponse($path);
+}
+
+
+/**
+ * Map a user to a drupal Global role based on his/her role in the LTI context.
+ *
+ * @param string $lti_roles
+ *   The string representing the lti_roles.
+ * @param integer $uid
+ *   The id of the user to assign the role.
+ */
+function lti_tool_provider_assign_global_roles_to_user($lti_roles, $account) {
+  $select_roles = user_roles(TRUE, NULL);
+  $global_role_array = \Drupal::configFactory()->getEditable('lti_tool_provider.settings')->get('global_role_array');
+  $roles = explode(',', $lti_roles);
+  foreach ($roles as $key => $raw_role) {
+    $tmp = explode(':', $raw_role);
+    $tmp2 = explode('/', end($tmp));
+    $lti_role = end($tmp2);
+    // Check if the mapped global role exist                                                                                                                                                                         
+    if (isset($global_role_array[$lti_role]) && isset($select_roles[$global_role_array[$lti_role]])) {
+      if( $global_role_array[$lti_role] != 'authenticated' ){
+        $account->addRole($global_role_array[$lti_role]);
+        $account->save();
+      }
+    }
+  }
+}
+
+
+function lti_tool_provider_strtolower($text) {
+  global $multibyte;
+  if ($multibyte == 1) {
+    return mb_strtolower($text);
+  }
+  else {
+    // Use C-locale for ASCII-only lowercase
+    $text = strtolower($text);
+    // Case flip Latin-1 accented letters
+    $text = preg_replace_callback('/\xC3[\x80-\x96\x98-\x9E]/', '_lti_tool_provider_unicode_caseflip', $text);
+    return $text;
+  }
+}
+
+function _lti_tool_provider_unicode_caseflip($matches) {
+  return $matches[0][0] . chr(ord($matches[0][1]) ^ 32);
+}
+
+function lti_tool_provider_arg($index = NULL, $path = NULL) {
+  // Even though $arguments doesn't need to be resettable for any functional
+  // reasons (the result of explode() does not depend on any run-time
+  // information), it should be resettable anyway in case a module needs to
+  // free up the memory used by it.
+  // Use the advanced drupal_static() pattern, since this is called very often.
+  static $drupal_static_fast;
+  if (!isset($drupal_static_fast)) {
+    $drupal_static_fast['arguments'] = &drupal_static(__FUNCTION__);
+  }
+  $arguments = &$drupal_static_fast['arguments'];
+
+  if (!isset($path)) {
+    $path = $_GET['q'];
+  }
+  if (!isset($arguments[$path])) {
+    $arguments[$path] = explode('/', $path);
+  }
+  if (!isset($index)) {
+    return $arguments[$path];
+  }
+  if (isset($arguments[$path][$index])) {
+    return $arguments[$path][$index];
+  }
+}
+
+
+function lti_tool_provider_user_roles($membersonly = FALSE, $permission = NULL){
+  $return = array();
+  $select_roles = user_roles($membersonly, $permission);
+  foreach($select_roles as $role){
+    $return[$role->id()] = $role->label();
+  }
+  return $return;
+}
+
+
+
+// function lti_tool_provider_variable_set($name, $value) {
+//   \Drupal::config('lti_tool_provider.settings')->set($name, $value)->save();
+// }
+
+// function lti_tool_provider_variable_get($name, $default = NULL) {
+//   return \Drupal::config('lti_tool_provider.settings')->get($name) ?: $default;
+// }
+

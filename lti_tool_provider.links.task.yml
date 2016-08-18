@@ -1,0 +1,22 @@
+# Define the 'local' links for the module
+
+# consumer.settings_tab:
+#   route_name: lti_tool_provider.consumer_settings
+#   title: 'Settings'
+#   base_route: lti_tool_provider.consumer_settings
+
+lti_tool_provider.consumer_view:
+  route_name: lti_tool_provider.consumer_view
+  base_route: lti_tool_provider.consumer_view
+  title: 'View'
+
+consumer.page_edit:
+  route_name: lti_tool_provider.consumer_edit
+  base_route: lti_tool_provider.consumer_view
+  title: Edit
+
+consumer.delete_confirm:
+  route_name:  lti_tool_provider.consumer_delete
+  base_route:  lti_tool_provider.consumer_view
+  title: Delete
+  weight: 10

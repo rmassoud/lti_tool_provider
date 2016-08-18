@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the LTI Tool Provider module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function lti_tool_provider_install() {
+  
+  \Drupal::configFactory()->getEditable('lti_tool_provider.settings')->set('global_role_array', array(
+    'Learner' => 1,
+    'Instructor' => 1,
+    'ContentDeveloper' => 1,
+    'Member' => 1,
+    'Manager' => 1,
+    'Mentor' => 1,
+    'Administrator' => 1,
+    'TeachingAssistant' => 1,
+    ))->save();
+
+  \Drupal::configFactory()->getEditable('lti_tool_provider.settings')->set('global_role_array', array(
+    'lis_person_name_given' => 'none',
+    'lis_person_name_family' => 'none',
+    'lis_person_name_full' => 'none',
+  ))->save();
+
+  \Drupal::configFactory()->getEditable('lti_tool_provider.settings')->set('custom_url', 'node/[node:nid]')->save();
+
+}
+
+/**
+ * Implements hook_schema().
+ */
+function lti_tool_provider_schema() {
+  $schema = array();
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function lti_tool_provider_uninstall() {
+}

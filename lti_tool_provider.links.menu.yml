@@ -1,0 +1,43 @@
+lti_tool_provider.admin:
+  title: 'LTI Tool Provider'
+  parent: system.admin_config
+  route_name: lti_tool_provider.admin
+  weight: 0
+lti_tool_provider.consumer_list:
+  title: 'LTI Tool Consumers'
+  parent: lti_tool_provider.admin
+  description: 'Administer LTI Tool Consumers.'
+  route_name: lti_tool_provider.consumer_list
+  weight: 1
+lti_tool_provider.user_attributes:
+  title: 'User Attributes'
+  parent: lti_tool_provider.admin
+  description: 'Configure LTI context to user attribute mapping.'
+  route_name: lti_tool_provider.user_attributes
+  weight: 2
+lti_tool_provider.global_roles:
+  title: 'Global Roles'
+  parent: lti_tool_provider.admin
+  description: 'Configure LTI context to global role mapping.'
+  route_name: lti_tool_provider.global_roles
+  weight: 3
+lti_tool_provider.course_types:
+  title: 'Course Types'
+  parent: lti_tool_provider.admin
+  description: 'Configure content types to course mapping.'
+  route_name: lti_tool_provider.course_types
+  weight: 4
+
+
+# lti_tool_provider.group_mapping:
+#   title: 'Group Mapping'
+#   parent: lti_tool_provider.admin
+#   description: 'Configure LTI context to Drupal group mapping.'
+#   route_name: lti_tool_provider.group_mapping
+#   weight: 3
+lti_tool_provider.info: 
+  title: 'LTI Info'
+  parent: main
+  description: 'View all the LTI context variables.'
+  route_name: lti_tool_provider.info
+  weight: 10

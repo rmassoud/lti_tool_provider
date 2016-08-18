@@ -1,0 +1,10 @@
+administer lti_tool_provider module:
+  title: 'Administer LTI Tool Provider module'
+  description: 'Perform administration tasks for the LTI Tool Provider module.'
+
+view lti info:
+  title: 'View LTI Context Variables'
+
+access lti_tool_provider_consumer entities:
+ title: 'Access LTI Tool Provider Consumer entities'
+ description: 'Read/View access for LTI Tool Provider Consumers.'

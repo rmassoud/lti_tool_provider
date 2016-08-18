@@ -1,0 +1,5 @@
+type: module
+name: LTI Tool Provider
+description: 'An LTI Tool Provider module for LMS/Drupal integration.'
+package: Custom
+core: 8.x
