@@ -40,8 +40,8 @@ use Drupal\user\UserInterface;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "edit-form" = "lti_tool_provider_consumer.edit_form",
- *     "delete-form" = "lti_tool_provider.consumer_delete"
+ *     "edit-form" = "/lti_tool_provider_consumer.edit_form",
+ *     "delete-form" = "/lti_tool_provider.consumer_delete"
  *   },
  * )
  *
